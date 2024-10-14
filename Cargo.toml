@@ -80,6 +80,7 @@ macos-system-configuration = ["dep:system-configuration"]
 # Experimental HTTP/3 client.
 http3 = ["rustls-tls-manual-roots", "dep:h3", "dep:h3-quinn", "dep:quinn", "dep:slab", "dep:futures-channel"]
 
+pyodide = ["dep:pyo3", "dep:pyo3-async-runtimes"]
 
 # Internal (PRIVATE!) features used to aid testing.
 # Don't rely on these whatsoever. They may disappear at any time.
@@ -113,6 +114,10 @@ sync_wrapper = { version = "1.0", features = ["futures"] }
 serde_json = { version = "1.0", optional = true }
 ## multipart
 mime_guess = { version = "2.0", default-features = false, optional = true }
+
+# pyo3 for pyodide
+pyo3 = { version = "0.22", optional = true }
+pyo3-async-runtimes = { git = "https://github.com/audunhalland/pyo3-async-runtimes.git", branch = "pyodide", features = ["tokio-runtime"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 encoding_rs = { version = "0.8", optional = true }
@@ -188,14 +193,14 @@ system-configuration = { version = "0.6.0", optional = true }
 
 # wasm
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.45"
 serde_json = "1.0"
 wasm-bindgen = "0.2.89"
 wasm-bindgen-futures = "0.4.18"
 wasm-streams = { version = "0.4", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.web-sys]
 version = "0.3.28"
 features = [
     "AbortController",
@@ -215,7 +220,7 @@ features = [
     "ReadableStream"
 ]
 
-[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
 wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
 wasm-bindgen-test = "0.3"
 
