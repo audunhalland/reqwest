@@ -287,6 +287,7 @@ impl From<Vec<u8>> for Body {
 async fn pyodide_fetch(req: Request) -> crate::Result<Response> {
     let pyfetch = Python::with_gil(move |py| call_pyfetch(req, py))?;
 
+    println!("awaiting future");
     let py_fetch_response = pyfetch.await.map_err(py_err)?;
 
     Python::with_gil(move |py| to_response(py_fetch_response, py))
@@ -296,9 +297,11 @@ fn call_pyfetch(
     req: Request,
     py: Python,
 ) -> crate::Result<impl Future<Output = PyResult<PyObject>>> {
-    let pyodide = PyModule::import_bound(py, "pyodide").map_err(py_err)?;
-    let http = pyodide.getattr("http").map_err(py_err)?;
-    let pyfetch = http.getattr("pyfetch").map_err(py_err)?;
+    let pyodide_http = PyModule::import_bound(py, "pyodide.http").map_err(py_err)?;
+    println!("http successfully imported");
+
+    let pyfetch = pyodide_http.getattr("pyfetch").map_err(py_err)?;
+    println!("got pyfetch");
 
     let url = req.url.to_string();
 
@@ -320,8 +323,10 @@ fn call_pyfetch(
         // kwargs.set_item("body", todo!("make body"));
     }
 
+    println!("calling pyfetch");
     let coroutine = pyfetch.call((url,), Some(&kwargs)).map_err(py_err)?;
 
+    println!("got coroutine");
     pyo3_async_runtimes::tokio::into_future(coroutine).map_err(py_err)
 }
 
